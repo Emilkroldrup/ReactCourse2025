@@ -4,6 +4,7 @@ export const pokemonApi = createApi({
   reducerPath: "pokemonApi",
   baseQuery: fetchBaseQuery({ baseUrl: "https://pokeapi.co/api/v2/" }),
   endpoints: (builder) => ({
+    
     getPokemonList: builder.query<{ results: { name: string; url: string }[] }, number>({
       query: (offset = 0) => `pokemon?limit=20&offset=${offset}`,
     }),

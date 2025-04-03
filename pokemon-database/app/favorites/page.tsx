@@ -1,13 +1,63 @@
 "use client";
 
-import { useSelector } from "react-redux";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/lib/store";
+import { useGetFavoritesQuery } from "@/lib/services/favoritesApi";
+import { setFavorites } from "@/lib/features/favoritesSlice";
 import Link from "next/link";
 
 export default function FavoritesPage() {
+  const dispatch = useDispatch();
+  const { data: favoriteIds = [], isLoading, error } = useGetFavoritesQuery();
   const favorites = useSelector(
     (state: RootState) => state.favorites.favorites
   );
+
+  useEffect(() => {
+    if (favoriteIds.length > 0) {
+      // Fetch full Pokemon data for each favorite
+      const fetchFavoriteDetails = async () => {
+        const favoritePokemon = await Promise.all(
+          favoriteIds.map(async (id) => {
+            const response = await fetch(
+              `https://pokeapi.co/api/v2/pokemon/${id}`
+            );
+            const pokemon = await response.json();
+            return {
+              id: pokemon.id,
+              name: pokemon.name,
+              image: pokemon.sprites.other["official-artwork"].front_default,
+            };
+          })
+        );
+        dispatch(setFavorites(favoritePokemon));
+      };
+      fetchFavoriteDetails();
+    }
+  }, [favoriteIds, dispatch]);
+
+  if (isLoading) {
+    return (
+      <div className="p-4">
+        <h1 className="text-3xl font-bold text-center mb-6">
+          ⭐ Mine Favorit Pokémon
+        </h1>
+        <p className="text-center text-gray-500">Loading favorites...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4">
+        <h1 className="text-3xl font-bold text-center mb-6">
+          ⭐ Mine Favorit Pokémon
+        </h1>
+        <p className="text-center text-red-500">Error loading favorites</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4">

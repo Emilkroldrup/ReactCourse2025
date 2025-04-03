@@ -1,9 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "@/lib/store";
-import { addFavorite, removeFavorite } from "@/lib/features/favoritesSlice";
+import { useDispatch } from "react-redux";
+import {
+  useGetFavoritesQuery,
+  useAddFavoriteMutation,
+  useRemoveFavoriteMutation,
+} from "@/lib/services/favoritesApi";
 import PokemonStats from "./PokemonStats";
 import PokemonTypes from "./PokemonTypes";
 
@@ -25,22 +28,17 @@ export default function PokemonDetails({
   onBack,
 }: PokemonDetailsProps) {
   const dispatch = useDispatch();
-  const favorites = useSelector(
-    (state: RootState) => state.favorites.favorites
-  );
-  const isFavorite = favorites.some((fav) => fav.id === pokemon.id);
+  const { data: favoriteIds = [], isLoading } = useGetFavoritesQuery();
+  const [addFavorite] = useAddFavoriteMutation();
+  const [removeFavorite] = useRemoveFavoriteMutation();
 
-  const handleFavorite = () => {
+  const isFavorite = favoriteIds.includes(pokemon.id);
+
+  const handleFavorite = async () => {
     if (isFavorite) {
-      dispatch(removeFavorite(pokemon.id));
+      await removeFavorite(pokemon.id);
     } else {
-      dispatch(
-        addFavorite({
-          id: pokemon.id,
-          name: pokemon.name,
-          image: pokemon.sprites.other["official-artwork"].front_default,
-        })
-      );
+      await addFavorite(pokemon.id);
     }
   };
 
@@ -76,13 +74,18 @@ export default function PokemonDetails({
 
         <button
           onClick={handleFavorite}
+          disabled={isLoading}
           className={`mt-4 px-4 py-2 rounded-lg text-white transition-colors ${
             isFavorite
               ? "bg-red-500 hover:bg-red-600"
               : "bg-green-500 hover:bg-green-600"
-          }`}
+          } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
         >
-          {isFavorite ? "❌ Fjern fra favoritter" : "⭐ Tilføj til favoritter"}
+          {isLoading
+            ? "Loading..."
+            : isFavorite
+            ? "❌ Fjern fra favoritter"
+            : "⭐ Tilføj til favoritter"}
         </button>
 
         <PokemonTypes types={pokemon.types} typeColors={typeColors} />
