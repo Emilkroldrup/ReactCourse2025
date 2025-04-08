@@ -75,7 +75,7 @@ const PokemonDetail = () => {
 
 // Example of a protected route component
 const ProtectedRoute = () => {
-  const isAuthenticated = true; // This would come from your auth state
+  const isAuthenticated = true; // This would come from my auth state
 
   return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
 };
